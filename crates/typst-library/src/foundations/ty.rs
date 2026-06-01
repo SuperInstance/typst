@@ -8,9 +8,10 @@ use std::sync::LazyLock;
 use ecow::{EcoString, eco_format};
 use typst_utils::{DefSite, Static};
 
-use crate::diag::{StrResult, WarningSink, bail};
+use crate::diag::{BindingSink, StrResult, bail};
 use crate::foundations::{
-    AutoValue, Func, NativeFuncData, NoneValue, Repr, Scope, Value, cast, func,
+    AutoValue, BindingAccess, Func, NativeFuncData, NoneValue, Repr, Scope, Value, cast,
+    func,
 };
 
 /// Describes a kind of value.
@@ -118,10 +119,10 @@ impl Type {
     pub fn field(
         &self,
         field: &str,
-        sink: impl WarningSink,
+        sink: impl BindingSink,
     ) -> StrResult<&'static Value> {
         match self.scope().get(field) {
-            Some(binding) => Ok(binding.read_checked(sink)),
+            Some(binding) => binding.read_checked(sink).what("cannot access type field"),
             None => bail!("type {self} does not contain field `{field}`"),
         }
     }
