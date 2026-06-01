@@ -71,7 +71,7 @@ fn compile(command: &CompileCommand) -> ExitCode {
 fn watch(command: &WatchCommand) -> ! {
     let mut timer = Timer::new_or_placeholder(command.args.timings.clone());
     let mut watcher = Watcher::new(None).unwrap();
-    let mut config = Config::new(&command.args, true);
+    let mut config = Config::new(&command.args, !command.emit);
     let mut world = DocWorld::new(&config);
 
     loop {
