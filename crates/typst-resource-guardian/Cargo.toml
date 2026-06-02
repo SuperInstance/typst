@@ -1,0 +1,22 @@
+[package]
+name = "typst-resource-guardian"
+description = "Resource budget enforcement for Typst compilation — CPU time, memory, pages, font cache."
+version = { workspace = true }
+rust-version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
+keywords = { workspace = true }
+readme = { workspace = true }
+
+[dependencies]
+chrono = { workspace = true }
+ecow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

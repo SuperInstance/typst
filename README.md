@@ -192,6 +192,30 @@ If you want to share your own creations, you can submit them to our
 
 If you had a bad experience in our community, please [reach out to us][contact].
 
+## 🏆 SuperInstance Enhancement: Resource Guardian
+
+This fork (SuperInstance/typst) adds the **Resource Guardian** — compilation
+budgets for Typst. Your 500-page thesis can't take down your machine.
+
+```sh
+# Compile with a 30-second time budget, 500 MB memory limit, and 1000 page max:
+typst compile --budget=time:30s,memory:500MB,pages:1000 doc.typ
+
+# Or just set what you care about:
+typst compile --budget=time:60s doc.typ
+typst compile --budget=memory:2GB doc.typ
+```
+
+**How it works:**
+- Monitors CPU time, memory, and page count during compilation
+- Phased escalation: 70% → warning, 85% → degraded rendering, 100% → hard stop with partial output
+- Per-chapter tracking identifies which sections are expensive
+- Incremental compilation detection flags full recompilations
+
+See [`crates/typst-resource-guardian/INTEGRATION.md`](crates/typst-resource-guardian/INTEGRATION.md) for details.
+
+---
+
 ## Contributing
 We love to see contributions from the community. If you experience bugs, feel
 free to open an issue. If you would like to implement a new feature or bug fix,

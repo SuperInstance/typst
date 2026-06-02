@@ -3149,6 +3149,7 @@ dependencies = [
  "typst-macros",
  "typst-pdf",
  "typst-render",
+ "typst-resource-guardian",
  "typst-svg",
  "typst-timing",
  "typst-utils",
@@ -3482,6 +3483,16 @@ dependencies = [
  "typst-macros",
  "typst-timing",
  "typst-utils",
+]
+
+[[package]]
+name = "typst-resource-guardian"
+version = "0.14.2"
+dependencies = [
+ "chrono",
+ "ecow",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

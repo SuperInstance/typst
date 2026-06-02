@@ -18,6 +18,7 @@ use typst_kit::timer::Timer;
 use typst_layout::{Page, PagedDocument};
 use typst_pdf::{PdfOptions, PdfStandards, Timestamp};
 use typst_render::RenderOptions;
+use typst_resource_guardian::{parse_budget, ResourceGuardian};
 use typst_svg::SvgOptions;
 use typst_utils::Scalar;
 
@@ -85,6 +86,9 @@ pub struct CompileConfig {
     /// Server for `typst watch` to HTML.
     #[cfg(feature = "http-server")]
     pub server: Option<HttpServer>,
+
+    /// Resource Guardian for enforcing compilation budgets.
+    pub resource_guardian: Option<std::sync::Arc<ResourceGuardian>>,
 }
 
 impl CompileConfig {
@@ -246,6 +250,14 @@ impl CompileConfig {
             deps_format,
             #[cfg(feature = "http-server")]
             server,
+            resource_guardian: match &args.budget {
+                Some(budget_str) => {
+                    let budget = parse_budget(budget_str)
+                        .map_err(|e| eco_format!("invalid --budget: {e}"))?;
+                    Some(typst_resource_guardian::ResourceGuardian::new(budget))
+                }
+                None => None,
+            },
         })
     }
 }
@@ -271,6 +283,14 @@ pub fn compile_once(
             SourceDiagnostic::warning(Span::detached(), warning.message())
                 .with_hints(warning.hints().iter().map(Into::into)),
         );
+    }
+
+    // Print Resource Guardian status if active.
+    if let Some(guardian) = &config.resource_guardian {
+        eprintln!("[🌿 Resource Guardian] {}", guardian.status());
+        if guardian.should_stop() {
+            eprintln!("[🌿 Resource Guardian] ⛔ Hard stop reached — partial output may be incomplete.");
+        }
     }
 
     match &output {
