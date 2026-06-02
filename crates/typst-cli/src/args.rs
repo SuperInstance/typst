@@ -391,6 +391,14 @@ pub struct CompileArgs {
     /// apart from file names and line numbers.
     #[arg(long = "timings", value_name = "OUTPUT_JSON")]
     pub timings: Option<PathBuf>,
+
+    /// Resource budgets for compilation: `time:30s,memory:500MB,pages:1000`.
+    ///
+    /// The Resource Guardian monitors compilation and enforces budgets with
+    /// phased escalation: 70% warning → 85% degraded → 100% hard stop with
+    /// partial output.
+    #[arg(long = "budget", value_name = "BUDGET")]
+    pub budget: Option<String>,
 }
 
 /// Arguments for the construction of a world. Shared by compile, watch, eval, and
