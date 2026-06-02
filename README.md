@@ -194,25 +194,74 @@ If you had a bad experience in our community, please [reach out to us][contact].
 
 ## 🏆 SuperInstance Enhancement: Resource Guardian
 
-This fork (SuperInstance/typst) adds the **Resource Guardian** — compilation
-budgets for Typst. Your 500-page thesis can't take down your machine.
+You're compiling a 400-page technical document. At page 312, typst has consumed
+6 GB of memory and is still going. Your laptop fan is screaming.
 
 ```sh
-# Compile with a 30-second time budget, 500 MB memory limit, and 1000 page max:
-typst compile --budget=time:30s,memory:500MB,pages:1000 doc.typ
-
-# Or just set what you care about:
-typst compile --budget=time:60s doc.typ
-typst compile --budget=memory:2GB doc.typ
+typst compile report.typ --budget=time:30s,memory:500MB,pages:1000
 ```
 
-**How it works:**
-- Monitors CPU time, memory, and page count during compilation
-- Phased escalation: 70% → warning, 85% → degraded rendering, 100% → hard stop with partial output
-- Per-chapter tracking identifies which sections are expensive
-- Incremental compilation detection flags full recompilations
+Phase 1 of 3: resource usage at 20%. Everything looks normal. The compiler
+moves through your document at a healthy clip.
 
-See [`crates/typst-resource-guardian/INTEGRATION.md`](crates/typst-resource-guardian/INTEGRATION.md) for details.
+```
+[🌿 Resource Guardian] 6.2s/30.0s compile, 95MB/500MB memory,
+101 pages/1000 pages, fonts: 42 | time: Normal, memory: Normal, pages: Normal
+```
+
+Phase 2 of 3: you hit 70% of the memory budget.
+
+```
+[🌿 Resource Guardian] 18.7s/30.0s compile, 353MB/500MB memory,
+202 pages/1000 pages, fonts: 42 | time: Normal, memory: Warning, pages: Normal
+```
+
+A warning reaches stderr. The compiler keeps going, but you know that complex
+tables on page 203 are pushing memory toward the ceiling.
+
+Phase 3 of 3: 85% memory — degraded mode kicks in. Simpler layout, reduced
+quality on the most expensive elements. The output stays usable.
+
+```
+[🌿 Resource Guardian] 24.1s/30.0s compile, 482MB/500MB memory,
+283 pages/1000 pages, fonts: 42 | time: Normal, memory: Degraded, pages: Normal
+```
+
+At 100% — hard stop. Partial output saved. Your machine stays responsive.
+
+```
+[🌿 Resource Guardian] 28.3s/30.0s compile, 501MB/500MB memory,
+312 pages/1000 pages, fonts: 42 | time: Normal, memory: HardStop, pages: Normal
+[🌿 Resource Guardian] ⛔ Hard stop reached — partial output may be incomplete.
+```
+
+**The ah-ha moment:** Your document has an infinite recursion in a table
+template. Without resource guardian: typst runs forever, fills 16 GB of RAM,
+and the kernel OOM-kills it — no output saved. With it: stopped at 30 seconds,
+280 pages of good output preserved, the explicit backtrace in stderr points
+directly at the offending template.
+
+Here is how the phased escalation works under the hood:
+
+| Consumption | Phase    | Behavior                         |
+|-------------|----------|----------------------------------|
+| 0–69%       | Normal   | Full-speed compilation            |
+| 70–84%      | Warning  | Stderr warning, continue          |
+| 85–99%      | Degraded | Simplified layout, reduce quality |
+| 100%+       | HardStop | Halt, save partial output         |
+
+Usage is straightforward:
+
+```sh
+typst compile --budget=time:60s doc.typ       # time only
+typst compile --budget=memory:2GB doc.typ     # memory only
+typst compile --budget=time:30s,memory:500MB,pages:1000 doc.typ  # all three
+```
+
+The compiler also tracks expensive chapters, so you can pinpoint which
+section is blowing your budget. See
+[`crates/typst-resource-guardian/INTEGRATION.md`](crates/typst-resource-guardian/INTEGRATION.md)
+for the full integration guide.
 
 ---
 
